@@ -3,10 +3,14 @@ import EventModel from '../models/event.model';
 
 const EventControllers = {
 	createEvent: async (req, res) => {
+
+		if (new Date(req.body.endDatetime) - new Date(req.body.startDatetime) <= 0) {
+			return res.json({ isError: true, errorMessage: 'End date should be bigger that start date' });
+		}
 		const event = {
 			name: req.body.name,
-			startDatetime: req.body.startDatetime,
-			endDateTime: req.body.endDateTime,
+			startDatetime: new Date(req.body.startDatetime),
+			endDateTime: new Date(req.body.endDateTime),
 			owner: req.user.id,
 			location: req.body.location || '',
 		};
@@ -27,7 +31,7 @@ const EventControllers = {
 	addUserToEvent: async (req, res) => {
 		let updateResponse = {};
 		try {
-			updateResponse = await EventModel.updateEvent({ _id: req.params.id }, { $addToSet: { usersInTheEvent: req.body.userId } });
+			updateResponse = await EventModel.updateEvent({ _id: req.params.id, owner: req.user.id }, { $addToSet: { usersInTheEvent: req.body.userId } });
 		} catch (error) {
 			return res.json({ isError: true, errorMessage: error.message });
 		}
@@ -42,7 +46,7 @@ const EventControllers = {
 	deleteUserToEvent: async (req, res) => {
 		let updateResponse = {};
 		try {
-			updateResponse = await EventModel.updateEvent({ _id: req.params.id }, { $pull: { usersInTheEvent: req.body.userId } });
+			updateResponse = await EventModel.updateEvent({ _id: req.params.id, owner: req.user.id }, { $pull: { usersInTheEvent: req.body.userId } });
 		} catch (error) {
 			return res.json({ isError: true, errorMessage: error.message });
 		}
@@ -57,7 +61,7 @@ const EventControllers = {
 	updateEvent: async (req, res) => {
 		let updateResponse = {};
 		try {
-			updateResponse = await EventModel.updateEvent({ _id: req.params.id }, req.body.dataToUpdate);
+			updateResponse = await EventModel.updateEvent({ _id: req.params.id, owner: req.user.id }, { ...req.body });
 		} catch (error) {
 			return res.json({ isError: true, errorMessage: error.message });
 		}
@@ -86,8 +90,30 @@ const EventControllers = {
 
 	getEvents: async (req, res) => {
 		let events = [];
+
+		const where = { owner: req.user.id };
+
+		if (req.query.name) {
+			where['name'] = { $regex: req.query.name, $options: 'i' };
+		}
+		if (req.query.location) {
+			where['location'] = { $regex: req.query.location, $options: 'i' };
+		}
+		if (req.query.startDate) {
+			where['startDatetime'] = { $gt: new Date(req.query.startDate) };
+		}
+		if (req.query.endDate) {
+			where['startDatetime'] = { $lt: new Date(req.query.endDate) };
+		}
+		if (req.query.startDate) {
+			where['startDatetime'] = { $gt: new Date(req.query.startDate) };
+		}
+		if (req.query.isOnlyPast) {
+			where['endDatetime'] = { $lt: new Date() };
+		}
+
 		try {
-			events = await EventModel.getEvents({ owner: req.user.id });
+			events = await EventModel.getEvents(where);
 		} catch (error) {
 			return res.json({ isError: true, errorMessage: error.message });
 		}
@@ -101,8 +127,30 @@ const EventControllers = {
 
 	inAdded: async (req, res) => {
 		let events = [];
+
+		const where = { usersInTheEvent: req.user.id };
+
+		if (req.query.name) {
+			where['name'] = { $regex: req.query.name, $options: 'i' };
+		}
+		if (req.query.location) {
+			where['location'] = { $regex: req.query.location, $options: 'i' };
+		}
+		if (req.query.startDate) {
+			where['startDatetime'] = { $gt: new Date(req.query.startDate) };
+		}
+		if (req.query.endDate) {
+			where['startDatetime'] = { $lt: new Date(req.query.endDate) };
+		}
+		if (req.query.startDate) {
+			where['startDatetime'] = { $gt: new Date(req.query.startDate) };
+		}
+		if (req.query.isOnlyPast) {
+			where['endDatetime'] = { $lt: new Date() };
+		}
+
 		try {
-			events = await EventModel.getEvents({ usersInTheEvent: '5cbafd5892c80e151cd92573' });
+			events = await EventModel.getEvents();
 		} catch (error) {
 			return res.json({ isError: true, errorMessage: error.message });
 		}

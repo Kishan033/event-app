@@ -14,8 +14,8 @@ router.use(function (req, res, next) {
 	next();
 });
 
-export default (app) => {
+export default () => {
 	router.use('/user', userRoutes);
 	router.use('/event', eventRoutes);
-	return router.use('/api/v1/', router);
+	return router.use(process.env.BASE_URL, router);
 }

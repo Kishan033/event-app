@@ -5,7 +5,8 @@ import cookieParser from 'cookie-parser';
 import chalk from 'chalk';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
-require('./services/passport');
+
+import './services/passport';
 import mongoDb  from './helpers/mongoDB';
 import routes from './routes';
 
@@ -17,8 +18,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use('/', routes());
 
-// =========================Database connection=====================================
-const mongoURL = mongoDb.makeConnectionString();
+// ================================Database connection=====================================
+const mongoURL = process.env.NODE_ENV === 'testing' ? process.env.DB_CONNECTION_STRING : mongoDb.makeConnectionString();
 mongoose.connect(mongoURL, { useNewUrlParser: true });
 const db = mongoose.connection;
 
@@ -57,15 +58,18 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  res.status(err.status || 500).json({
+    isError: true,
+    errorMessage: err.message
+  });
 });
 
-app.listen(3000, () =>
-  console.log('Example app listening on port 3000!'),
+const port = process.env.PORT || 3000;
+app.listen(port, () =>
+  console.log(`Example app listening on port ${port}!`),
 );
+
+export default app;

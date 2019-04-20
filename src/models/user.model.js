@@ -16,12 +16,12 @@ const UserSchema = mongoose.Schema({
 	userName: {
 		type: String,
 		required: true,
-		// unique: true,
+		unique: true,
 	},
 	email: {
 		type: String,
 		required: true,
-		// unique: true,
+		unique: true,
 	},
 	password: {
 		type: String,
@@ -45,7 +45,7 @@ UserSchema.pre('save', function (next) {
 UserSchema.methods.comparePassword = function (candidatePassword, cb) {
 	return new Promise((res, rej) => {
 		bcrypt.compare(candidatePassword, this.password, function (err, isMatch) {
-			if(isMatch) res(true);
+			if (isMatch) res(true);
 			res(false);
 		});
 	})

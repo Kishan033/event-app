@@ -1,6 +1,4 @@
 import express from 'express';
-// SERVICES.
-import auth from '../services/auth';
 // CONTROLLERS
 import userController from '../controllers/user.controller';
 
